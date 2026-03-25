@@ -34,20 +34,14 @@ export const createOrder=(req,res)=>{
     }
 };
 
-// دالة لمحاكاة معالجة الطلبات (مثلاً حفظها في قاعدة البيانات)
 const processOrders = () => {
     if (orderBuffer.length > 0) {
         console.log(`🚀 Processing ${orderBuffer.length} orders...`);
-        
-        // هنا نقوم بتفريغ الطابور بعد معالجته
-        // في المستقبل، هنا سنستخدم Prisma لحفظ البيانات
         orderBuffer.length = 0; 
-        
         console.log("✅ Queue cleared.");
     } else {
         console.log("😴 No orders to process. Waiting...");
     }
 };
 
-// تشغيل المعالج كل 10 ثوانٍ تلقائياً
 setInterval(processOrders, 10000);
