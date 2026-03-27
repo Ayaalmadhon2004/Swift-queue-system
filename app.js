@@ -5,6 +5,7 @@ import cors from 'cors';
 import orderRoutes from './routes/orderRoutes.js';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middlewares/errorMiddleware.js';
 
 const limiter=rateLimit({
     windowMs:15*60*1000,
@@ -26,6 +27,8 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api/orders',orderRoutes);
+
+app.use(errorHandler);
 
 app.get('/',(req,res)=>res.send("swiftQueue secure"));
 const PORT=process.env.PORT || 3000;

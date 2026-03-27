@@ -24,7 +24,7 @@ const processOrders = async () => {
 
 setInterval(processOrders, 10000);
 
-export const createOrder = async (req, res) => {
+export const createOrder = async (req, res, next) => {
     try {
         const validatedData = orderSchema.parse(req.body);
 
@@ -42,18 +42,6 @@ export const createOrder = async (req, res) => {
         });
 
     } catch (error) {
-        if (error.name === "ZodError") {
-            const errorDetails = error.errors.map(e => e.message);
-            
-            logger.warn(`⚠️ Validation Failed: ${JSON.stringify(errorDetails)}`);
-
-            return res.status(400).json({
-                error: "Validation Failed",
-                details: errorDetails
-            });
-        }
-
-        logger.error(`🔥 Unexpected Server Error: ${error.message}`);
-        res.status(500).json({ error: "Server Error" });
+        next(error);
     }
 };
