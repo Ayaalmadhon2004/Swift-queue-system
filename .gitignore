@@ -1,2 +1,7 @@
 node_modules
 /generated/prisma
+# Logs
+logs
+*.log
+npm-debug.log*
+
