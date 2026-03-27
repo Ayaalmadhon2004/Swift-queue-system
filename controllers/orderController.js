@@ -25,3 +25,16 @@ export const getOrder=asyncHandler(async (req,res)=>{
         data:order
     });
 });
+
+
+export const getOrders = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const result = await orderService.getAllOrders(page, limit);
+
+    res.status(200).json({
+        success: true,
+        ...result
+    });
+});

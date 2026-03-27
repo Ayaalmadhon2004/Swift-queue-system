@@ -33,3 +33,26 @@ export const getOrderById=async(id)=>{
     })
     return order;
 }
+
+export const getAllOrders = async (page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+        prisma.order.findMany({
+            take: limit,
+            skip: skip,
+            orderBy: { createdAt: 'desc' } 
+        }),
+        prisma.order.count() 
+    ]);
+
+    return {
+        orders,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit)
+        }
+    };
+};
