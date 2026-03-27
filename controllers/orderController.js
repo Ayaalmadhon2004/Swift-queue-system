@@ -1,47 +1,13 @@
-import prisma from '../lib/prisma.js';
 import { orderSchema } from '../validations/orderValidation.js';
-import logger from '../lib/logger.js'; 
-let orderBuffer = [];
+import * as orderService from '../services/orderService.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
-const processOrders = async () => {
-    if (orderBuffer.length > 0) {
-        logger.info(`🚀 Attempting to sync ${orderBuffer.length} orders with Neon...`);
-        
-        try {
-            await prisma.order.createMany({
-                data: orderBuffer
-            });
-            
-            logger.info(`✅ Successfully synced ${orderBuffer.length} orders. Queue cleared.`);
-            orderBuffer = []; 
-        } catch (error) {
-            logger.error(`❌ Database Sync Failed: ${error.message}`);
-        }
-    } else {
-        logger.debug("😴 Buffer is empty, skipping sync.");
-    }
-};
-
-setInterval(processOrders, 10000);
-
-export const createOrder = async (req, res, next) => {
-    try {
-        const validatedData = orderSchema.parse(req.body);
-
-        orderBuffer.push({
-            userId: validatedData.userId,
-            productId: validatedData.productId,
-            status: "pending"
-        });
-
-        logger.info(`📥 Order added to buffer: User ${validatedData.userId}`);
-
-        res.status(202).json({ 
-            message: "Order received and validated. It will be processed shortly.",
-            queueSize: orderBuffer.length 
-        });
-
-    } catch (error) {
-        next(error);
-    }
-};
+export const createOrder = asyncHandler(async (req, res) => {
+    const validatedData = orderSchema.parse(req.body);
+    const queueSize = orderService.addOrderToBuffer(validatedData);
+    res.status(202).json({ 
+        success: true,
+        message: "Order queued successfully",
+        queueSize
+    });
+});
