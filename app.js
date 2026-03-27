@@ -1,11 +1,15 @@
 import 'dotenv/config';
 import express from 'express';
 import helmet from 'helmet';
+import cors from 'cors';
 import orderRoutes from './routes/orderRoutes.js';
 import morgan from 'morgan';
 
 const app=express();
+
 app.use(helmet());
+app.use(cors());
+
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/api/orders',orderRoutes);
