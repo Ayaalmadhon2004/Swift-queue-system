@@ -1,47 +1,51 @@
-const orderBuffer=[];
+import prisma from '../lib/prisma.js';
+import { orderSchema } from '../validations/orderValidation.js';
 
-export const createOrder=(req,res)=>{
-    try{
+let orderBuffer = [];
 
-        if(!req.body || Object.keys(req.body).length===0){
-            return res.status(400).json({
-                error:"Request body is missing or empty",
-                tip:"Make sure to send a JSON body with userId and productId"
-            });
-        }
-        const {userId,productId}=req.body;
-
-        if(!userId){
-            return res.status(400).json({error:"userId is required"});
-        }
-
-        const newOrder={
-            userId,
-            productId,
-            timestamp:new Date()
-        };
-
-        orderBuffer.push(newOrder);
-
-        res.status(201).json({
-            success:true,
-            message:"Order received and is being processed",
-            queueLength:orderBuffer.length
-        });
-
-    }catch(error){
-        res.status(500).json({error:"Internal Server Error"});
-    }
-};
-
-const processOrders = () => {
+const processOrders = async () => {
     if (orderBuffer.length > 0) {
-        console.log(`🚀 Processing ${orderBuffer.length} orders...`);
-        orderBuffer.length = 0; 
-        console.log("✅ Queue cleared.");
-    } else {
-        console.log("😴 No orders to process. Waiting...");
+        console.log(`🚀 Sending ${orderBuffer.length} validated orders to Neon...`);
+        
+        try {
+            await prisma.order.createMany({
+                data: orderBuffer
+            });
+            
+            orderBuffer = []; 
+            console.log("✅ Database synced and Queue cleared.");
+        } catch (error) {
+            console.error("❌ Failed to sync with Neon:", error.message);
+        }
     }
 };
 
 setInterval(processOrders, 10000);
+
+export const createOrder = async (req, res) => {
+    try {
+        // 1. الفحص أولاً (Zod) - إذا فشل سيقفز للـ catch فوراً
+        const validatedData = orderSchema.parse(req.body);
+
+        // 2. إذا نجح، نضعه في الـ Buffer (لا نرسله لـ Neon الآن)
+        orderBuffer.push({
+            userId: validatedData.userId,
+            productId: validatedData.productId,
+            status: "pending"
+        });
+
+        res.status(202).json({ 
+            message: "Order received and validated. It will be processed shortly.",
+            queueSize: orderBuffer.length 
+        });
+
+    } catch (error) {
+        if (error.name === "ZodError") {
+            return res.status(400).json({
+                error: "Validation Failed",
+                details: error.errors.map(e => e.message)
+            });
+        }
+        res.status(500).json({ error: "Server Error" });
+    }
+};
