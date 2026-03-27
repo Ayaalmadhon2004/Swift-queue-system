@@ -11,3 +11,17 @@ export const createOrder = asyncHandler(async (req, res) => {
         queueSize
     });
 });
+
+export const getOrder=asyncHandler(async (req,res)=>{
+    const {id} = req.params;
+    const order=await orderService.getOrderById(id);
+    if(!order){
+        const error=new Error("Order not found");
+        error.statusCode=404;
+        throw error;
+    }
+    res.status(200).json({
+        success:true,
+        data:order
+    });
+});

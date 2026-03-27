@@ -25,3 +25,11 @@ export const syncOrdersWithDb = async () => {
 };
 
 setInterval(syncOrdersWithDb, 10000);
+
+
+export const getOrderById=async(id)=>{
+    const order=await prisma.order.findUnique({
+        where:{id:id},
+    })
+    return order;
+}
