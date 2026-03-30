@@ -6,6 +6,7 @@ import orderRoutes from './routes/orderRoutes.js';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { errorHandler } from './middlewares/errorMiddleware.js';
+import authRoutes from './routes/authRoutes.js';
 
 const limiter=rateLimit({
     windowMs:15*60*1000,
@@ -29,6 +30,7 @@ app.use(morgan('dev'));
 app.use('/api/orders',orderRoutes);
 
 app.use(errorHandler);
+app.use('/api/auth', authRoutes);
 
 app.get('/',(req,res)=>res.send("swiftQueue secure"));
 const PORT=process.env.PORT || 3000;

@@ -4,11 +4,14 @@ import asyncHandler from '../utils/asyncHandler.js';
 
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
-    const queueSize = orderService.addOrderToBuffer(validatedData);
+    const queueSize = orderService.addOrderToBuffer({
+        ...validatedData,
+        userId:req.userId
+    });
     res.status(202).json({ 
         success: true,
         message: "Order queued successfully",
-        queueSize
+        currentQueue:queueSize
     });
 });
 
