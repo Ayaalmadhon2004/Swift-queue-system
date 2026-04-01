@@ -2,9 +2,6 @@ import { orderSchema } from '../validations/orderValidation.js';
 import * as orderService from '../services/orderService.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
-// what is the difference between all these functions ? create order,getorder,getorders....?
-// what is the difference between 200 and 202 ? 
-
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
     const queueSize = orderService.addOrderToBuffer({

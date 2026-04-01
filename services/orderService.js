@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import logger from '../lib/logger.js';
+import { getIO } from '../lib/socket.js'; 
 
 let orderBuffer = [];
 
@@ -67,16 +68,16 @@ export const getUserOrders=async(userId)=>{
     });
 };
 
-export const updateOrderStatus=async (getOrderById,status)=>{
+export const updateOrderStatus=async (orderId,status)=>{
     const updatedOrder=await prisma.order.update({
         where:{id:orderId},
         data:{status}
     });
-    const io=getID();//from where this getId can i have it 
+    const io=getIO();
     io.to(updatedOrder.userId).emit('status_updated',{
         orderId:updatedOrder.id,
         newStatus:status,
-        message:'Your order status has been updated to ${status}'
+        message:`Your order status has been updated to ${status}`
     });
     return updatedOrder;
 };

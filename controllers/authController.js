@@ -47,7 +47,6 @@ export const updateMe=asyncHandler(async(req,res)=>{
         data:updateUser
     });
 });
-// what is the usage of asyncHandler ?
 
 export const changePassword=asyncHandler(async(req,res)=>{
     const {currentPassword,newPassword}=req.body; // the req we have it from post section or what 
