@@ -11,9 +11,9 @@ export const registerSchema = async (userData) => {
             name: userData.name
         }
     });
-
     return user;
 };
+
 export const loginSchema = async (email, password) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("Invalid credentials");
@@ -24,7 +24,7 @@ export const loginSchema = async (email, password) => {
     return { user, token };
 };
 
-export const getUserProfile=async(userId)=>{
+export const getUserProfile=async(userId)=>{ // this parameter userId it comes from prisma ? 
     return await prisma.user.findUnique({
         where:{id:userId},
         select:{
@@ -39,3 +39,20 @@ export const getUserProfile=async(userId)=>{
         }
     });
 }
+
+export const updateUserProfile=async (userId,updateData)=>{
+    return await prisma.user.update({
+        where:{id:userId},
+        data:{
+            name:updateData.name,
+            email:updateData.email
+        },
+        select:{
+            id:true,
+            name:true,
+            email:true
+        }
+    });
+};
+
+// tell me all crud we user after prisma.user.??? update,findUnique...??

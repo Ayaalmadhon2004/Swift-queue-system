@@ -37,3 +37,13 @@ export const getMe = asyncHandler(async(req,res)=>{
         data:user
     });
 });
+
+export const updateMe=asyncHandler(async(req,res)=>{
+    const {name,email} = req.body;
+    const updateUser = await authService.updateUserProfile(req.userId,{name,email});
+    res.status(200).json({
+        success:true ,
+        message:"Profile updated successfully",
+        data:updateUser
+    });
+});

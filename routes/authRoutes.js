@@ -8,7 +8,8 @@ router.post('/register', register);
 router.post('/login', login);
 
 router.get('/me',protect,getMe);
+router.put('/me',protect,updateMe);
 
-// what is the difference between router.post and router.push here ? ? and why in get we use 2 params also protect,getMe?
-
+// what is the difference between router.post and router.push and router.put here ? ? and why in get we use 2 params also protect,getMe?
+// why i put protect with getMe and updateMe and not use it in register and login
 export default router;
