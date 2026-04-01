@@ -2,6 +2,9 @@ import { orderSchema } from '../validations/orderValidation.js';
 import * as orderService from '../services/orderService.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
+// what is the difference between all these functions ? create order,getorder,getorders....?
+// what is the difference between 200 and 202 ? 
+
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
     const queueSize = orderService.addOrderToBuffer({
@@ -39,5 +42,15 @@ export const getOrders = asyncHandler(async (req, res) => {
     res.status(200).json({
         success: true,
         ...result
+    });
+});
+
+export const getMyOrders=asyncHanlder(async(req,res)=>{
+    const orders=await orderService.getUserOrders(req.userId);
+
+    res.status(200).json({
+        success:true,
+        count:orders.length,
+        data:orders
     });
 });

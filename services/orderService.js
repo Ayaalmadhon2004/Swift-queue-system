@@ -56,3 +56,13 @@ export const getAllOrders = async (page = 1, limit = 10) => {
         }
     };
 };
+
+export const getUserOrders=async(userId)=>{
+    return await prisma.order.findMany({
+        where:{userId:userId},
+        orderBy:{createdAt:'desc'},
+        include:{
+            product:true
+        }
+    });
+};
