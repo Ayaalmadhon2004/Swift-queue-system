@@ -14,7 +14,6 @@ export const registerSchema = async (userData) => {
 
     return user;
 };
-
 export const loginSchema = async (email, password) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("Invalid credentials");
@@ -24,3 +23,19 @@ export const loginSchema = async (email, password) => {
 
     return { user, token };
 };
+
+export const getUserProfile=async(userId)=>{
+    return await prisma.user.findUnique({
+        where:{id:userId},
+        select:{
+            id:true,
+            name:true,
+            email:true,
+            createdAt:true,
+            orders:{
+                orderBy:{createdAt:'desc'},
+                take:5
+            }
+        }
+    });
+}

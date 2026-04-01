@@ -23,3 +23,17 @@ export const login=asyncHandler(async(req,res)=>{
         user: { id: user.id, email: user.email, name: user.name }
     });
 });
+
+export const getMe = asyncHandler(async(req,res)=>{
+    const user = await authService.getUserProfile(req.userId);
+
+    if(!user){
+        const error=new Error("User not found ");
+        error.statusCode=404;
+        throw error;
+    }
+    res.status(200).json({
+        success:true,
+        data:user
+    });
+});
