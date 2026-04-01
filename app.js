@@ -9,6 +9,7 @@ import { errorHandler } from './middlewares/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import http from 'http';
 import { initSocket } from './lib/socket.js';
+import { initCronJobs } from './utils/cronJobs.js';
 
 const limiter=rateLimit({
     windowMs:15*60*1000,
@@ -22,6 +23,9 @@ const limiter=rateLimit({
 });
 
 const app=express();
+
+initSocket(server);
+initCronJobs();
 
 app.use(limiter);
 app.use(helmet());
@@ -38,7 +42,6 @@ app.get('/',(req,res)=>res.send("swiftQueue secure"));
 const PORT=process.env.PORT || 3000;
 
 const server=http.createServer(app);
-initSocket(server);
 
 app.listen(PORT ,()=>{
     console.log(`swift queue server is running on port ${PORT}`);
