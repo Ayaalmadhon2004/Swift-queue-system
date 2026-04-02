@@ -10,6 +10,7 @@ import authRoutes from './routes/authRoutes.js';
 import http from 'http';
 import { initSocket } from './lib/socket.js';
 import { initCronJobs } from './utils/cronJobs.js';
+import { specs } from './docs/swagger.js';
 
 const limiter=rateLimit({
     windowMs:15*60*1000,
@@ -37,6 +38,8 @@ app.use('/api/orders',orderRoutes);
 
 app.use(errorHandler);
 app.use('/api/auth', authRoutes);
+
+app.use('/api-docs',swaggerUi.server , swaggerUi.setup(specs)); // what is the difference between these ?
 
 app.get('/',(req,res)=>res.send("swiftQueue secure"));
 const PORT=process.env.PORT || 3000;
