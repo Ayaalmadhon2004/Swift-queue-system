@@ -1,4 +1,4 @@
-import cron from 'node-cron'; // what is cron and why we use it ?
+import cron from 'node-cron'; 
 import prisma from '../lib/prisma.js';
 import logger from '../lib/logger.js';
 

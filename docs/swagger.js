@@ -1,6 +1,8 @@
+import swaggerJsdoc from 'swagger-jsdoc';
+
 const options={
     definition:{
-        openapi:'3.0.0', // what is the ?
+        openapi:'3.0.0',
         info:{
             title:"SwiftQueue API",
             version:'1.0.0', 
@@ -12,18 +14,17 @@ const options={
                 description:"Development server",
             },
         ],
-        // why i am using these [] ?
         components:{
-            securitySchemes:{ // what is these? and what is bearer ? 
+            securitySchemes:{
                 bearerAuth:{
                     type:'http',
                     schema:'bearer',
-                    bearerFormat:'JWT', // theres any other format ?
+                    bearerFormat:'JWT', 
                 },
             },
         },
     },
-    apis:["./routes/*.js"], // where is this file and what is it for ? and what do we mean by annotations?
+    apis:["./routes/*.js"], 
 };
 
-export const specs=swaggerJsdoc(options); // what is swaggerJsdoc and why we use it ?
+export const specs=swaggerJsdoc(options);
