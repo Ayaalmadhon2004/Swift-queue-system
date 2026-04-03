@@ -1,52 +1,58 @@
-import 'dotenv/config';
+import 'dotenv/config'; // هذا السطر كافٍ لتحميل المتغيرات فوراً
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import orderRoutes from './routes/orderRoutes.js';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import { errorHandler } from './middlewares/errorMiddleware.js';
-import authRoutes from './routes/authRoutes.js';
 import http from 'http';
+import swaggerUi from 'swagger-ui-express'; // تأكدي من إضافة هذا الـ import
+
+// استيراد المسارات والملفات الخاصة بكِ
+import orderRoutes from './routes/orderRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import { errorHandler } from './middlewares/errorMiddleware.js';
 import { initSocket } from './lib/socket.js';
 import { initCronJobs } from './utils/cronJobs.js';
 import { specs } from './docs/swagger.js';
 
+const app = express();
+const server = http.createServer(app); // إنشاء السيرفر أولاً ليتم تمريره للـ Socket
 
-const limiter=rateLimit({
-    windowMs:15*60*1000,
-    max:100,
-    message:{
-        error:"Too many requests from this IP, please try again after 15 minutes.",
-        message:"Please try again after 15 minutes"
-    },
-    standardHeaders:true,
-    legacyHeaders:false,
-});
-
-const app=express();
-
-initSocket(server);
+// 1. تهيئة الخدمات الخارجية (Initialization)
+initSocket(server); 
 initCronJobs();
 
-app.use(limiter);
+// 2. الميدل وير الأساسية (Global Middlewares)
 app.use(helmet());
 app.use(cors());
-
 app.use(express.json());
 app.use(morgan('dev'));
-app.use('/api/orders',orderRoutes);
 
-app.use(errorHandler);
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    message: {
+        error: "Too many requests from this IP",
+        message: "Please try again after 15 minutes"
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/', limiter); // تطبيق المحدد على مسارات الـ API فقط
+
+// 3. المسارات (Routes)
+app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-app.use('/api-docs',swaggerUi.server , swaggerUi.setup(specs));
+app.get('/', (req, res) => res.send("SwiftQueue Secure Server is Live 🚀"));
 
-app.get('/',(req,res)=>res.send("swiftQueue secure"));
-const PORT=process.env.PORT || 3000;
+// 4. معالجة الأخطاء (يجب أن تكون آخر شيء)
+app.use(errorHandler);
 
-const server=http.createServer(app);
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT ,()=>{
-    console.log(`swift queue server is running on port ${PORT}`);
+// تشغيل السيرفر من خلال الكائن server (وليس app) ليعمل الـ Socket.io
+server.listen(PORT, () => {
+    console.log(`✅ SwiftQueue server is running on port ${PORT}`);
 });

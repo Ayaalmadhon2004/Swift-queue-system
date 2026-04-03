@@ -42,7 +42,7 @@ export const getOrders = asyncHandler(async (req, res) => {
     });
 });
 
-export const getMyOrders=asyncHanlder(async(req,res)=>{
+export const getMyOrders=asyncHandler(async(req,res)=>{
     const orders=await orderService.getUserOrders(req.userId);
 
     res.status(200).json({
@@ -51,3 +51,14 @@ export const getMyOrders=asyncHanlder(async(req,res)=>{
         data:orders
     });
 });
+
+export const getWaitingCount = async (req, res) => {
+    try {
+        const count = await prisma.order.count({
+            where: { status: 'PREPARING' }
+        });
+        res.json({ waitingCount: count });
+    } catch (error) {
+        res.status(500).json({ error: "Error counting orders" });
+    }
+};
