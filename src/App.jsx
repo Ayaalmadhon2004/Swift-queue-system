@@ -4,7 +4,6 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// how login front and back different of route ? and how to connect them with each other ?
 function App(){
     return (
         <AuthProvider>
@@ -19,3 +18,4 @@ function App(){
         </AuthProvider>
     )
 }
+export default App;

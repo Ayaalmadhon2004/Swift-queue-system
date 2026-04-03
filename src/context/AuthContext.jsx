@@ -7,7 +7,6 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // دالة للتحقق من التوكن عند تشغيل التطبيق لأول مرة
     useEffect(() => {
         const checkUser = async () => {
             try {
@@ -32,7 +31,6 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        // why i am using localStorage here instead of prisma , we use prisma 
         localStorage.removeItem('token');
         setUser(null);
     };
