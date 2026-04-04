@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
-import api from '../api/axiosConfig';
+import api from '../api/axiosConfig'; // instead of calling axios in everypage , this is like a global source 
 
 const Dashboard = () => {
     const { user, logout } = useContext(AuthContext);
@@ -25,6 +25,12 @@ const Dashboard = () => {
                 order.id === update.orderId ? { ...order, status: update.newStatus } : order
             ));
         });
+
+        socket.on('newOrder',(newOrder)=>{
+            const audio=new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.play().catch(e=>console.log("Adio play blocked by browser "));
+            setOrders((prev)=>[newOrder,...prev]);
+        }); // newOrder and name it is name to call ? if soo where i call it ? socket.on like to open a clone of bibe ?so if i want to have part of socket i use on to open ? and how front will know the audio and make it ? 
 
         return () => socket.disconnect(); 
     }, []);
