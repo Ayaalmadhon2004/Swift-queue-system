@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import PublicDisplay from './pages/PublicDisplay'; 
 import QueueDisplay from './pages/QueueDisplay';
 import ProtectedRoute from './components/ProtectedRoute';
+import TicketGenerator from './pages/TicketGenerator';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/public-display" element={<PublicDisplay />} />
             <Route path="/display" element={<QueueDisplay />} />
+            <Route path="/ticket" element={<TicketGenerator />} />
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
             </Route>
