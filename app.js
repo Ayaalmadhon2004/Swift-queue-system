@@ -7,23 +7,19 @@ import http from 'http';
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 
-// استيراد المسارات والملفات الخاصة بكِ
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
-// تأكدي من وجود هذه الملفات في مساراتها الصحيحة
-// import { initSocket } from './lib/socket.js'; 
-// import { initCronJobs } from './utils/cronJobs.js';
 import { specs } from './docs/swagger.js';
 
-const app = express(); // ✅ 1. تعريف التطبيق أولاً
-const server = http.createServer(app); // 2. إنشاء السيرفر
+const app = express(); 
+const server = http.createServer(app); 
 
-// 3. الميدل وير الأساسية (Global Middlewares)
 app.use(cors({
-    origin: 'http://localhost:5173', // منفذ Vite الخاص بكِ
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true
 }));
+
 app.use(helmet());
 app.use(express.json());
 app.use(morgan('dev'));

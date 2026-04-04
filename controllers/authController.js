@@ -13,8 +13,8 @@ export const register=asyncHandler(async(req,res)=>{
 });
 
 export const login=asyncHandler(async(req,res)=>{
-    const {email,password}=loginUser.parse(req.body);
-    const {user,token}=await authService.loginSchema(email,password);
+    const {email,password} = loginSchema.parse(req.body);
+const {user,token} = await authService.loginUser(email,password);
 
     res.status(200).json({
         success:true,
