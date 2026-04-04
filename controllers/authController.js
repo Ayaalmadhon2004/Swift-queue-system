@@ -2,7 +2,7 @@ import * as authService from '../services/authService.js';
 import { registerSchema, loginSchema } from '../validations/authValidation.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
-export const register=asyncHandler(async(requestAnimationFrame,res)=>{
+export const register=asyncHandler(async(req,res)=>{
     const validatedData=registerSchema.parse(req.body);
     const user=await authService.registerUser(validatedData);
     res.status(201).json({
@@ -13,7 +13,7 @@ export const register=asyncHandler(async(requestAnimationFrame,res)=>{
 });
 
 export const login=asyncHandler(async(req,res)=>{
-    const {email,password}=loginSchema.parse(req.body);
+    const {email,password}=loginUser.parse(req.body);
     const {user,token}=await authService.loginSchema(email,password);
 
     res.status(200).json({

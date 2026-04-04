@@ -1,32 +1,33 @@
-import 'dotenv/config'; // هذا السطر كافٍ لتحميل المتغيرات فوراً
+import 'dotenv/config'; 
 import express from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import http from 'http';
-import swaggerUi from 'swagger-ui-express'; // تأكدي من إضافة هذا الـ import
+import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 
 // استيراد المسارات والملفات الخاصة بكِ
 import orderRoutes from './routes/orderRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
-import { initSocket } from './lib/socket.js';
-import { initCronJobs } from './utils/cronJobs.js';
+// تأكدي من وجود هذه الملفات في مساراتها الصحيحة
+// import { initSocket } from './lib/socket.js'; 
+// import { initCronJobs } from './utils/cronJobs.js';
 import { specs } from './docs/swagger.js';
 
-const app = express();
-const server = http.createServer(app); // إنشاء السيرفر أولاً ليتم تمريره للـ Socket
+const app = express(); // ✅ 1. تعريف التطبيق أولاً
+const server = http.createServer(app); // 2. إنشاء السيرفر
 
-// 1. تهيئة الخدمات الخارجية (Initialization)
-initSocket(server); 
-initCronJobs();
-
-// 2. الميدل وير الأساسية (Global Middlewares)
+// 3. الميدل وير الأساسية (Global Middlewares)
+app.use(cors({
+    origin: 'http://localhost:5173', // منفذ Vite الخاص بكِ
+    credentials: true
+}));
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
+
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -38,21 +39,18 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use('/api/', limiter); // تطبيق المحدد على مسارات الـ API فقط
+app.use('/api/', limiter);
 
-// 3. المسارات (Routes)
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 app.get('/', (req, res) => res.send("SwiftQueue Secure Server is Live 🚀"));
 
-// 4. معالجة الأخطاء (يجب أن تكون آخر شيء)
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// تشغيل السيرفر من خلال الكائن server (وليس app) ليعمل الـ Socket.io
 server.listen(PORT, () => {
     console.log(`✅ SwiftQueue server is running on port ${PORT}`);
 });

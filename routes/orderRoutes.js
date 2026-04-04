@@ -1,5 +1,5 @@
 import express from 'express';
-import {createOrder, getOrder, getOrders} from '../controllers/orderController.js';
+import {createOrder, getOrder, getOrders,getMyOrders,getWaitingCount} from '../controllers/orderController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 import prisma from '../lib/prisma.js';
 
