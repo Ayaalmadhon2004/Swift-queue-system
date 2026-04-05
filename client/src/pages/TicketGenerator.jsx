@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
+import { Socket } from 'socket.io-client';
 
 const TicketGenerator = () => {
   const [customerName, setCustomerName] = useState('');
@@ -18,7 +19,19 @@ const TicketGenerator = () => {
 
   useEffect(() => {
     fetchWaitingCount();
-  }, [ticket]);
+
+    if(Socket){
+      socket.on('orderStatusChanged',fetchWaitingCount);
+      socket.on('newOrder',fetchWaitingCount);
+    }
+    return ()=>{
+      if(socket){
+        socket.off('orderStatusChanged');
+        socket.off('newOrder')
+      }
+    }
+  }, [socket,ticket]);
+  //why i am using on and off ? 
 
   const handleJoinQueue = async (e) => {
     e.preventDefault();
