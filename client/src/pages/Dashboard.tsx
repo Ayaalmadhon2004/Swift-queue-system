@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig'; 
 import toast from 'react-hot-toast';
-import StatsChart from './StatsChart';
+import StatsChart from '../components/StatsChart';
 import { useSocket } from '../context/SocketContext';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 

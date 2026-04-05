@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import http from 'http';
+import { Server } from 'socket.io'; // 👈 1. استيراد مكتبة السوكيت
 import swaggerUi from 'swagger-ui-express';
 import cors from 'cors';
 
@@ -14,20 +15,37 @@ import { specs } from './docs/swagger.js';
 
 const app = express(); 
 const server = http.createServer(app); 
+const io = new Server(server, {
+    cors: {
+        origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5177'],
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+app.set('socketio', io);
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5176'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5177'],
     credentials: true
 }));
 
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false, 
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 
-
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 1000, 
     message: {
         error: "Too many requests from this IP",
         message: "Please try again after 15 minutes"

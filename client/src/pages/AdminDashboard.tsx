@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import api from '../api/axiosConfig'; 
 import toast from 'react-hot-toast';
 import { CSVLink } from "react-csv";
-import StatsChart from './StatsChart';
+import StatsChart from '../components/StatsChart';
 import { requestNotificationPermission, sendNotification } from '../utils/notifications';
 
 const AdminDashboard = () => {

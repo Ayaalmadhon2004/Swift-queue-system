@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
-import { Socket } from 'socket.io-client';
+import { useSocket } from '../context/SocketContext';
 
 const TicketGenerator = () => {
   const [customerName, setCustomerName] = useState('');
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(false);
   const [waitingCount, setWaitingCount] = useState(0);
+  const socket = useSocket();
 
   const fetchWaitingCount = async () => {
     try {
@@ -20,18 +21,18 @@ const TicketGenerator = () => {
   useEffect(() => {
     fetchWaitingCount();
 
-    if(Socket){
-      socket.on('orderStatusChanged',fetchWaitingCount);
-      socket.on('newOrder',fetchWaitingCount);
+    if (socket) {
+      socket.on('orderStatusChanged', fetchWaitingCount);
+      socket.on('newOrder', fetchWaitingCount);
     }
-    return ()=>{
-      if(socket){
-        socket.off('orderStatusChanged');
-        socket.off('newOrder')
+
+    return () => {
+      if (socket) {
+        socket.off('orderStatusChanged', fetchWaitingCount);
+        socket.off('newOrder', fetchWaitingCount);
       }
-    }
-  }, [socket,ticket]);
-  //why i am using on and off ? 
+    };
+  }, [socket]);
 
   const handleJoinQueue = async (e) => {
     e.preventDefault();
@@ -47,17 +48,17 @@ const TicketGenerator = () => {
     }
   };
 
-  const estimatedTime=waitingCount*5;
+  const estimatedTime = waitingCount * 5;
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans" dir="rtl">
       {!ticket ? (
         <div className="w-full max-w-md text-center space-y-8">
           <div className="space-y-2">
-            <h1 className="text-6xl font-black text-white">SwiftQueue</h1>
+            <h1 className="text-6xl font-black text-white tracking-tighter">SwiftQueue</h1>
             <p className="text-slate-400 text-xl">أهلاً بك! يرجى حجز رقم دورك</p>
           </div>
-          <div className="space-y-4">
+          <form onSubmit={handleJoinQueue} className="space-y-4">
             <input
               type="text"
               placeholder="أدخل اسمك هنا..."
@@ -67,35 +68,37 @@ const TicketGenerator = () => {
               required
             />
             <button
-              onClick={handleJoinQueue}
+              type="submit"
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-2xl shadow-xl shadow-blue-900/40 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? 'جاري استخراج التذكرة...' : 'احجز دورك الآن'}
             </button>
-          </div>
-          <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
-            <p className="text-slate-400">عدد الأشخاص في الانتظار: <span className="text-blue-400 font-bold text-2xl">{waitingCount}</span></p>
-          </div>
-          <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-2xl">
-            <p className="text-blue-400 text-sm">
-              الوقت المتوقع للانتظار: <span className="font-bold">{estimatedTime} دقيقة</span> ⏳
-            </p>
+          </form>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
+              <p className="text-slate-400 text-sm mb-1">في الانتظار</p>
+              <p className="text-blue-400 font-bold text-3xl">{waitingCount}</p>
+            </div>
+            <div className="p-6 bg-blue-900/20 border border-blue-500/30 rounded-3xl">
+              <p className="text-blue-400 text-sm mb-1">وقت تقريبي</p>
+              <p className="text-white font-bold text-3xl">{estimatedTime}د</p>
+            </div>
           </div>
         </div>
       ) : (
-        <div className="text-center space-y-10">
+        <div className="text-center space-y-10 animate-in fade-in zoom-in duration-500">
           <p className="text-3xl text-blue-400 font-bold">رقم دورك هو</p>
-          <div className="text-9xl font-black text-white">
+          <div className="text-[12rem] leading-none font-black text-white drop-shadow-2xl">
             {ticket.queueNumber}
           </div>
-          <div className="bg-white/5 p-8 rounded-3xl border border-white/10">
-            <p className="text-3xl">شكراً لك، <span className="text-blue-400 font-bold">{ticket.customerName}</span>!</p>
+          <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-sm">
+            <p className="text-3xl font-medium">شكراً لك، <span className="text-blue-400 font-black">{ticket.customerName}</span>!</p>
             <p className="text-slate-400 mt-2">يرجى الانتظار حتى ظهور رقمك على الشاشة</p>
           </div>
           <button
             onClick={() => { setTicket(null); setCustomerName(''); }}
-            className="text-slate-500 text-lg hover:text-white transition-colors underline"
+            className="text-slate-500 text-lg hover:text-white transition-colors underline underline-offset-8"
           >
             حجز تذكرة أخرى
           </button>

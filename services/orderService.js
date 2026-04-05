@@ -87,3 +87,20 @@ export const updateOrderStatus = async (orderId, status) => {
     });
     return updatedOrder;
 };
+
+export const getAdminStats = async () => {
+    const [totalOrders, preparing, ready, completed] = await Promise.all([
+        prisma.order.count(),
+        prisma.order.count({ where: { status: 'PREPARING' } }),
+        prisma.order.count({ where: { status: 'READY' } }),
+        prisma.order.count({ where: { status: 'COMPLETED' } }),
+    ]);
+
+    return {
+        totalOrders,
+        preparing,
+        ready,
+        completed,
+        avgWaitTime: 5
+    };
+};
