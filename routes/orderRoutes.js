@@ -17,7 +17,6 @@ router.get('/public', getPublicOrders);
 router.get('/count/pending', getPendingCount);
 router.post('/public/create', createPublicOrder);
 
-// ✅ مسارات محمية
 router.use(protect);
 router.get('/my-orders', getMyOrders);
 router.get('/count/waiting', getWaitingCount);
