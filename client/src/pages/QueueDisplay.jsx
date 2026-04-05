@@ -3,7 +3,7 @@ import api from "../api/axiosConfig";
 import { useSocket } from "../context/SocketContext";
 
 const QueueDisplay = () => {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState([]);
   const socket = useSocket();
 
   const fetchOrders = async () => {

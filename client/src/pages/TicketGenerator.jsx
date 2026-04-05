@@ -3,7 +3,7 @@ import api from '../api/axiosConfig';
 
 const TicketGenerator = () => {
   const [customerName, setCustomerName] = useState('');
-  const [ticket, setTicket] = useState<any>(null);
+  const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(false);
   const [waitingCount, setWaitingCount] = useState(0);
 
@@ -20,10 +20,9 @@ const TicketGenerator = () => {
     fetchWaitingCount();
   }, [ticket]);
 
-  const handleJoinQueue = async (e: React.FormEvent) => {
+  const handleJoinQueue = async (e) => {
     e.preventDefault();
     if (!customerName.trim()) return;
-
     setLoading(true);
     try {
       const { data } = await api.post('/orders/public/create', { customerName });
@@ -43,8 +42,7 @@ const TicketGenerator = () => {
             <h1 className="text-6xl font-black text-white">SwiftQueue</h1>
             <p className="text-slate-400 text-xl">أهلاً بك! يرجى حجز رقم دورك</p>
           </div>
-          
-          <form onSubmit={handleJoinQueue} className="space-y-4">
+          <div className="space-y-4">
             <input
               type="text"
               placeholder="أدخل اسمك هنا..."
@@ -54,32 +52,30 @@ const TicketGenerator = () => {
               required
             />
             <button
+              onClick={handleJoinQueue}
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-2xl shadow-xl shadow-blue-900/40 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? 'جاري استخراج التذكرة...' : 'احجز دورك الآن'}
             </button>
-          </form>
-
+          </div>
           <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
             <p className="text-slate-400">عدد الأشخاص في الانتظار: <span className="text-blue-400 font-bold text-2xl">{waitingCount}</span></p>
           </div>
         </div>
       ) : (
-        <div className="text-center space-y-10 animate-in fade-in zoom-in duration-500">
-          <div className="space-y-2">
-            <p className="text-3xl text-blue-400 font-bold uppercase tracking-[0.2em]">رقم دورك هو</p>
-            <div className="text-[15rem] leading-none font-black text-white drop-shadow-2xl">
-              {ticket.queueNumber}
-            </div>
+        <div className="text-center space-y-10">
+          <p className="text-3xl text-blue-400 font-bold">رقم دورك هو</p>
+          <div className="text-9xl font-black text-white">
+            {ticket.queueNumber}
           </div>
-          <div className="bg-white/5 p-8 rounded-3xl backdrop-blur-sm border border-white/10">
+          <div className="bg-white/5 p-8 rounded-3xl border border-white/10">
             <p className="text-3xl">شكراً لك، <span className="text-blue-400 font-bold">{ticket.customerName}</span>!</p>
             <p className="text-slate-400 mt-2">يرجى الانتظار حتى ظهور رقمك على الشاشة</p>
           </div>
-          <button 
+          <button
             onClick={() => { setTicket(null); setCustomerName(''); }}
-            className="text-slate-500 text-lg hover:text-white transition-colors underline underline-offset-8"
+            className="text-slate-500 text-lg hover:text-white transition-colors underline"
           >
             حجز تذكرة أخرى
           </button>

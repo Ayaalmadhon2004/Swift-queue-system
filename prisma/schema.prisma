@@ -16,16 +16,18 @@ model User {
   email     String   @unique
   password  String
   name      String?
-  orders    Order[] 
+  orders    Order[]
   role      Role     @default(STAFF)
   createdAt DateTime @default(now())
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  productId String
-  status    String   @default("pending")
-  createdAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  productId     String?
+  customerName  String?
+  queueNumber   Int      @default(0)
+  status        String   @default("PREPARING")
+  createdAt     DateTime @default(now())
 }
