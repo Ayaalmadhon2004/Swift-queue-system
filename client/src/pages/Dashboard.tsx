@@ -3,11 +3,48 @@ import { io } from 'socket.io-client';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig'; 
 import toast from 'react-hot-toast';
+import StatsChart from './StatsChart';
+import { useSocket } from '../context/SocketContext';
 
+// why i am using socket in every page ??? tell me 
 const Dashboard = () => {
     const { user, logout } = useContext(AuthContext);
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState(null);
+    const socket=useSocket();
+
+    const fetchStats=async()=>{
+        try{
+            const {data} = await api.get('/orders/admin/stats');
+            setStats(data);
+        } catch(err) {console.error(err);
+        }
+    }
+
+    useEffect(()=>{
+        fetchStats();
+
+        if(socket){
+           socket.on('orderStatusChanged', fetchStats);
+            socket.on('newOrder', fetchStats);
+        }
+        
+        return () => {
+            if (socket) {
+                socket.off('orderStatusChanged');
+                socket.off('newOrder');
+            }
+        };
+    }, [socket]);
+
+    if (!stats) return <div className="p-10 text-white">جاري تحليل البيانات...</div>;
+    
+    }
+
+    useEffect(() => {
+        api.get('/orders/admin/stats').then(res => setStats(res.data));
+    }, []);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -114,8 +151,36 @@ const Dashboard = () => {
                             ))
                         )}
                     </div>
+
+                    {stats && <StatsChart data={stats} />}
                 </div>
             </div>
+        </div>
+    );
+    return (
+        <div className="p-8 bg-slate-900 min-h-screen text-white font-sans" dir="rtl">
+            <h1 className="text-3xl font-black mb-10 border-b border-slate-800 pb-4">لوحة تحكم المدير 📊</h1>
+
+            {/* بطاقات الإحصائيات السريعة */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div className="bg-blue-600/10 border border-blue-500/30 p-8 rounded-[2rem] text-center">
+                    <p className="text-slate-400 text-sm mb-2">إجمالي الطلبات</p>
+                    <h2 className="text-5xl font-black text-blue-400">{stats.totalOrders}</h2>
+                </div>
+                <div className="bg-emerald-600/10 border border-emerald-500/30 p-8 rounded-[2rem] text-center">
+                    <p className="text-slate-400 text-sm mb-2">متوسط الانتظار</p>
+                    <h2 className="text-5xl font-black text-emerald-400">{stats.avgWaitTime} <span className="text-lg">دقيقة</span></h2>
+                </div>
+                <div className="bg-amber-600/10 border border-amber-500/30 p-8 rounded-[2rem] text-center">
+                    <p className="text-slate-400 text-sm mb-2">الطلبات النشطة</p>
+                    <h2 className="text-5xl font-black text-amber-400">
+                        {stats.statusDistribution.find((s:any) => s.status === 'PREPARING')?._count.id || 0}
+                    </h2>
+                </div>
+            </div>
+
+            {/* المكون الذي أنشأناه سابقاً للرسوم البيانية */}
+            <StatsChart data={stats} />
         </div>
     );
 };

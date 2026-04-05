@@ -62,3 +62,27 @@ export const getWaitingCount = asyncHandler(async (req, res) => {
     const count = await orderService.getPendingCount();
     res.json({ waitingCount: count });
 });
+
+export const getAdminStats = asyncHandler(async(req,res)=>{
+    const totalOrders=await prisma.order.count();
+    const today=new Date();
+    today.setHours(0,0,0,0);
+    const completedToday=await prisma.order.count({
+        where:{
+            status:'COMPLETED',
+            updatedAt:{gte:today}
+        }
+    });
+
+    const statusDistribution= await prisma.order.groupBy({
+        by:['status'],
+        _count:{id:true}
+    });
+
+    res.json({
+        totalOrders,
+        completedToday,
+        statusDistribution
+    });
+});
+

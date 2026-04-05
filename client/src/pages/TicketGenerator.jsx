@@ -47,6 +47,8 @@ const TicketGenerator = () => {
     }
   };
 
+  const estimatedTime=waitingCount*5;
+
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans" dir="rtl">
       {!ticket ? (
@@ -74,6 +76,11 @@ const TicketGenerator = () => {
           </div>
           <div className="p-6 bg-slate-800/50 rounded-3xl border border-slate-700">
             <p className="text-slate-400">عدد الأشخاص في الانتظار: <span className="text-blue-400 font-bold text-2xl">{waitingCount}</span></p>
+          </div>
+          <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-2xl">
+            <p className="text-blue-400 text-sm">
+              الوقت المتوقع للانتظار: <span className="font-bold">{estimatedTime} دقيقة</span> ⏳
+            </p>
           </div>
         </div>
       ) : (
