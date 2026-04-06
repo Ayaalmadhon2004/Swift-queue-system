@@ -32,11 +32,6 @@ io.on('connection', (socket) => {
     });
 });
 
-app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5177'],
-    credentials: true
-}));
-
 app.use(helmet({
     contentSecurityPolicy: false, 
 }));
@@ -53,7 +48,7 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-app.use('/api/', limiter);
+app.use('/api/', limiter); 
 
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);

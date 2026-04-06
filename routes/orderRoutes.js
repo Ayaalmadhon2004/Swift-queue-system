@@ -8,7 +8,7 @@ import {
     createPublicOrder,
     getPublicOrders,
     getPendingCount,
-    getAdminStats    // ✅ أضيفي هذا
+    getAdminStats    
 } from '../controllers/orderController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -21,7 +21,7 @@ router.post('/public/create', createPublicOrder);
 
 // محمية
 router.use(protect);
-router.get('/admin/stats', getAdminStats);  // ✅ أضيفي هذا
+router.get('/admin/stats', getAdminStats);  
 router.get('/my-orders', getMyOrders);
 router.get('/count/waiting', getWaitingCount);
 router.post('/', createOrder);

@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from '../utils/asyncHandler.js';
-
 export const protect = asyncHandler(async(req,res,next)=>{
     let token;
 
@@ -12,7 +11,7 @@ export const protect = asyncHandler(async(req,res,next)=>{
             next();
         } catch(error){
             const err=new Error('Not authorization , token failed');
-            err.statusCode=401;
+            err.statusCode=401; 
             throw err;
         }
     }
