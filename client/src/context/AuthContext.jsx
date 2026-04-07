@@ -10,13 +10,12 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkUser = async () => {
             try {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    const { data } = await api.get('/auth/me'); 
-                    setUser(data.data);
-                }
+                // لا نحتاج للبحث عن توكن يدوياً، الكوكي ستُرسل تلقائياً لـ /me
+                const { data } = await api.get('/auth/me'); 
+                setUser(data.data);
             } catch (error) {
-                localStorage.removeItem('token');
+                // إذا فشل الطلب (401)، يعني لا يوجد كوكي صالحة
+                setUser(null);
             } finally {
                 setLoading(false);
             }
@@ -25,14 +24,19 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
+        // السيرفر سيقوم بوضع الكوكي في المتصفح عند نجاح هذا الطلب
         const { data } = await api.post('/auth/login', { email, password });
-        localStorage.setItem('token', data.token);
         setUser(data.user);
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        setUser(null);
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout'); // طلب للسيرفر لمسح الكوكي
+        } catch (err) {
+            console.error("Logout failed", err);
+        } finally {
+            setUser(null);
+        }
     };
 
     return (
