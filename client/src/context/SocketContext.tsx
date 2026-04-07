@@ -7,11 +7,15 @@ export const SocketProvider = ({ children }) => {
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
+        // 1. الاتصال بالسيرفر مع تفعيل الكوكيز
         const newSocket = io('http://localhost:3000', {
-            auth: { token: localStorage.getItem('token') }
+            withCredentials: true, // 👈 هذه هي الإضافة الأهم للسماح بإرسال الكوكيز
+            transports: ['websocket'], // لضمان أداء أسرع ومستقر
         });
+
         setSocket(newSocket);
 
+        // 2. تنظيف الاتصال عند إغلاق التطبيق
         return () => {
             newSocket.disconnect();
         };
