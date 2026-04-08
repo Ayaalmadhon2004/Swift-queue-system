@@ -19,22 +19,18 @@ export const addOrderToBuffer = (orderData) => {
   } catch (err) {
     logger.warn('Socket emit failed in addOrderToBuffer', err);
   }
-
   return orderBuffer.length;
 };
 
-
 export const syncOrdersWithDb = async () => {
   if (orderBuffer.length === 0) return;
-
   logger.info(`🚀 Syncing ${orderBuffer.length} orders from buffer...`);
-
   const toCreate = [...orderBuffer];
   orderBuffer = [];
 
   try {
     const createdOrders = await prisma.$transaction(async (tx) => {
-    const lastOrder = await tx.order.findFirst({
+      const lastOrder = await tx.order.findFirst({
         orderBy: { queueNumber: 'desc' },
         lock: { mode: 'update' } 
       });
@@ -60,20 +56,17 @@ export const syncOrdersWithDb = async () => {
     } catch (err) {
       logger.warn('⚠️ Socket notification failed after sync', err);
     }
-
     logger.info(`✅ Successfully synced ${createdOrders.length} orders.`);
-
   } catch (error) {
     orderBuffer = [...toCreate, ...orderBuffer];
     logger.error(`❌ Sync Failed: ${error.message}. Data restored to buffer.`);
   }
 };
+
 setInterval(syncOrdersWithDb, 10000);
 
 export const createPublicOrder = async (customerName) => {
-  const lastOrder = await prisma.order.findFirst({
-    orderBy: { queueNumber: 'desc' }
-  });
+  const lastOrder = await prisma.order.findFirst({ orderBy: { queueNumber: 'desc' } });
   const queueNumber = (lastOrder?.queueNumber || 0) + 1;
 
   const order = await prisma.order.create({
@@ -92,7 +85,6 @@ export const createPublicOrder = async (customerName) => {
   } catch (err) {
     logger.warn('Socket emit failed in createPublicOrder', err);
   }
-
   return order;
 };
 
@@ -114,26 +106,15 @@ export const getOrderById = async (id) => {
 export const getAllOrders = async (page = 1, limit = 10) => {
   const skip = (page - 1) * limit;
   const [orders, total] = await Promise.all([
-    prisma.order.findMany({
-      take: limit,
-      skip,
-      orderBy: { createdAt: 'desc' }
-    }),
+    prisma.order.findMany({ take: limit, skip, orderBy: { createdAt: 'desc' } }),
     prisma.order.count()
   ]);
-  return {
-    orders,
-    pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
-  };
+  return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 
 export const getUserOrders = async (userId) => {
-  return await prisma.order.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' }
-  });
+  return await prisma.order.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
 };
-
 
 export const updateOrderStatus = async (orderId, status) => {
   const updatedOrder = await prisma.order.update({
@@ -151,14 +132,10 @@ export const updateOrderStatus = async (orderId, status) => {
         message: `Your order status has been updated to ${status}`
       });
     }
-    io.emit('orderStatusChanged', {
-      orderId: updatedOrder.id,
-      newStatus: status
-    });
+    io.emit('orderStatusChanged', { orderId: updatedOrder.id, newStatus: status });
   } catch (err) {
     logger.warn('Socket emit failed in updateOrderStatus', err);
   }
-
   return updatedOrder;
 };
 
@@ -170,11 +147,27 @@ export const getAdminStats = async () => {
     prisma.order.count({ where: { status: 'COMPLETED' } })
   ]);
 
+  return { totalOrders, preparing, ready, completed, avgWaitTime: 5 };
+};
+
+// الدالة الجديدة التي تطلبها صفحة التقارير لحل خطأ الـ 500
+export const getReportsData = async () => {
+  const stats = await prisma.order.groupBy({
+    by: ['createdAt'],
+    _count: { id: true },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const statusDist = await prisma.order.groupBy({
+    by: ['status'],
+    _count: { id: true },
+  });
+
   return {
-    totalOrders,
-    preparing,
-    ready,
-    completed,
-    avgWaitTime: 5
+    dailyStats: stats.map(s => ({
+      date: s.createdAt.toISOString().split('T')[0],
+      count: s._count.id
+    })),
+    statusDistribution: statusDist
   };
 };

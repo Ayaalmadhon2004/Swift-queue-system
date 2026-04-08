@@ -8,6 +8,8 @@ import PublicDisplay from './pages/PublicDisplay';
 import QueueDisplay from './pages/QueueDisplay';
 import ProtectedRoute from './components/ProtectedRoute';
 import TicketGenerator from './pages/TicketGenerator';
+import Reports from './pages/Reports';
+import MyOrders from './pages/MyOrders';
 
 function App() {
   return (
@@ -22,9 +24,14 @@ function App() {
             <Route path="/public-display" element={<PublicDisplay />} />
             <Route path="/display" element={<QueueDisplay />} />
             <Route path="/ticket" element={<TicketGenerator />} />
+
+            {/* المسارات المحمية */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/my-orders" element={<MyOrders />} /> {/* 👈 إضافة المسار */}
+              <Route path="/reports" element={<Reports />} />     {/* 👈 إضافة المسار */}
             </Route>
+
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         </BrowserRouter>

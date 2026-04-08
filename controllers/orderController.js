@@ -69,3 +69,10 @@ export const getAdminStats = asyncHandler(async (req, res) => {
     res.json(stats);
 });
 
+export const getReports = asyncHandler(async (req, res) => {
+    const reports = await orderService.getReportsData();
+    res.status(200).json({
+        success: true,
+        data: reports
+    });
+});

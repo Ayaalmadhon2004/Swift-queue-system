@@ -1,19 +1,22 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSocket } from "../context/SocketContext";
-import { requestNotificationPermission, sendLocalNotification } from "../utils/notifications";
+import { sendNotification as sendLocalNotification, requestNotificationPermission } from '../utils/notifications';
 import api from "../api/axiosConfig";
 
 const MyOrders = () => {
-    const [orders, setOrders] = useState([]);
+    const [orders, setOrders] = useState([]); // الحالة الابتدائية مصفوفة فارغة لضمان عمل map
     const [loading, setLoading] = useState(true);
     const socket = useSocket();
 
     const fetchMyOrders = useCallback(async () => {
         try {
             const { data } = await api.get("/orders/my-orders");
-            setOrders(data);
+            // الإصلاح الجوهري: استخراج المصفوفة من داخل كائن الرد (response.data.data)
+            const actualOrders = data.data || []; 
+            setOrders(actualOrders);
         } catch (err) {
             console.error("Error fetching orders:", err);
+            setOrders([]); // ضمان عدم تعطل التطبيق عند الخطأ
         } finally {
             setLoading(false);
         }
@@ -27,10 +30,10 @@ const MyOrders = () => {
         );
 
         if (newStatus === 'READY') {
-            sendLocalNotification(
-                `طلبك جاهز للاستلام! ✅`, 
-                `رقم الدور الخاص بك هو: ${queueNumber}`
-            );
+            sendLocalNotification(`طلبك جاهز للاستلام! ✅`, {
+                body: `رقم الدور الخاص بك هو: ${queueNumber}`,
+                icon: '/logo.png' 
+            });
             
             const audio = new Audio('/sounds/notification.mp3');
             audio.play().catch(() => console.log("Audio play blocked until user interaction"));
@@ -53,7 +56,11 @@ const MyOrders = () => {
         };
     }, [socket, handleStatusChange, fetchMyOrders]);
 
-    if (loading) return <div className="text-white p-10 text-center">جاري تحميل طلباتك...</div>;
+    if (loading) return (
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+            <div className="text-blue-500 animate-bounce font-black text-xl">جاري تحميل طلباتك...</div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-slate-900 text-white p-6 font-sans" dir="rtl">
@@ -63,7 +70,8 @@ const MyOrders = () => {
             </header>
 
             <div className="max-w-2xl mx-auto space-y-6">
-                {orders.length === 0 ? (
+                {/* استخدام Array.isArray للتأكد من نوع البيانات قبل الرندر */}
+                {Array.isArray(orders) && orders.length === 0 ? (
                     <div className="text-center py-20 bg-slate-800/50 rounded-3xl border border-dashed border-slate-700">
                         <p className="text-slate-500 text-xl">ليس لديك طلبات نشطة حالياً</p>
                     </div>
@@ -84,6 +92,7 @@ const MyOrders = () => {
                                 </div>
                             </div>
                             
+                            {/* شريط التقدم التفاعلي بناءً على الحالة */}
                             <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
                                 <div 
                                     className={`h-full transition-all duration-1000 ${

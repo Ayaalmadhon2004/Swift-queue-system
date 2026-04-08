@@ -1,29 +1,36 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react";
+import api from "../api/axiosConfig";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-const Reports = () =>{
-    const [reportData,setReportData] = useState(null);
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+const Reports = () => {
+    const [reportData, setReportData] = useState(null);
+    const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
-    useEffect(()=>{
-        const fetchReports = async ()=>{
-            const {data} = await api.get('/orders/admin/reports');
-            setReportData(data.data);
+    useEffect(() => {
+        const fetchReports = async () => {
+            try {
+                const { data } = await api.get('/orders/admin/reports');
+                setReportData(data.data);
+            } catch (err) {
+                console.error("Error fetching reports:", err);
+            }
         };
         fetchReports();
-    },[]);
+    }, []);
 
-    if (!reportData) return <div className="text-white p-10">جاري تحليل البيانات...</div>;
+    if (!reportData) return <div className="text-white p-10 text-center animate-pulse">جاري جلب الإحصائيات...</div>;
 
     return (
-       <div className="p-8 bg-slate-900 min-h-screen text-white" dir="rtl">
-            <h1 className="text-3xl font-black mb-10">تقارير الأداء الذكية 📊</h1>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* مخطط نمو الطلبات اليومي */}
-                <div className="bg-slate-800 p-6 rounded-[2rem] border border-slate-700">
-                    <h2 className="text-xl font-bold mb-6">حجم الطلبات (آخر 7 أيام)</h2>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+        <div className="p-8 bg-slate-900 min-h-screen text-white" dir="rtl">
+            <h1 className="text-3xl font-black mb-10">تقارير الأداء الذكية 📈</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* الرسم البياني الخطي - حجم الطلبات */}
+                <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700">
+                    <h2 className="text-xl font-bold mb-4 text-blue-400">حجم الطلبات (آخر 7 أيام)</h2>
+                    {/* حل مشكلة التحذير الأصفر: إعطاء ارتفاع ثابت للـ Container */}
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
                             <LineChart data={reportData.dailyStats}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                                 <XAxis dataKey="date" stroke="#94a3b8" />
@@ -35,21 +42,14 @@ const Reports = () =>{
                     </div>
                 </div>
 
-                {/* توزيع الحالات */}
-                <div className="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 flex flex-col items-center">
-                    <h2 className="text-xl font-bold mb-6">توزيع حالات الطلبات</h2>
-                    <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                {/* الرسم البياني الدائري - توزيع الحالات */}
+                <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700">
+                    <h2 className="text-xl font-bold mb-4 text-emerald-400">توزيع حالات الطلبات</h2>
+                    <div style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
                             <PieChart>
-                                <Pie
-                                    data={reportData.statusDistribution}
-                                    dataKey="_count.id"
-                                    nameKey="status"
-                                    cx="50%" cy="50%"
-                                    outerRadius={100}
-                                    label
-                                >
-                                    {reportData.statusDistribution.map((entry, index) => (
+                                <Pie data={reportData.statusDistribution} dataKey="_count.id" nameKey="status" cx="50%" cy="50%" outerRadius={80} label>
+                                    {reportData.statusDistribution?.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                     ))}
                                 </Pie>
