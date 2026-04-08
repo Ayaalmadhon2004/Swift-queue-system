@@ -138,7 +138,8 @@ export const getUserOrders = async (userId) => {
 export const updateOrderStatus = async (orderId, status) => {
   const updatedOrder = await prisma.order.update({
     where: { id: orderId },
-    data: { status }
+    data: { status },
+    include: { user: true }
   });
 
   try {
