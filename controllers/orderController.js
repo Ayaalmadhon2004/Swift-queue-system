@@ -1,7 +1,6 @@
 import * as orderService from '../services/orderService.js';
 import { orderSchema } from '../validations/orderValidation.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import prisma from '../lib/prisma.js';
 
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
@@ -74,5 +73,16 @@ export const getReports = asyncHandler(async (req, res) => {
     res.status(200).json({
         success: true,
         data: reports
+    });
+});
+
+export const getMyOrders2=asyncHandler(async(req,res)=>{
+    const orders=await orderService.getUserOrders(req.user.id);
+    const waitTime=await orderService.getEstimatedWaitTime();
+
+    res.status(200).json({
+        success:true,
+        data:orders,
+        estimatedWaitTime: waitTime
     });
 });

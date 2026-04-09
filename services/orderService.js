@@ -125,7 +125,7 @@ export const updateOrderStatus = async (orderId, status) => {
 
   try {
     const io = getIO();
-    if (updatedOrder.userId) {
+    if (updatedOrder.userId) { 
       io.to(updatedOrder.userId).emit('status_updated', {
         orderId: updatedOrder.id,
         newStatus: status,
@@ -150,7 +150,6 @@ export const getAdminStats = async () => {
   return { totalOrders, preparing, ready, completed, avgWaitTime: 5 };
 };
 
-// الدالة الجديدة التي تطلبها صفحة التقارير لحل خطأ الـ 500
 export const getReportsData = async () => {
   const stats = await prisma.order.groupBy({
     by: ['createdAt'],
@@ -170,4 +169,22 @@ export const getReportsData = async () => {
     })),
     statusDistribution: statusDist
   };
+};
+
+export const getEstimatedWaitTime = async()=>{
+  const completedOrders = await prisma.order.findMany({
+    where:{status:'COMPLETED'},
+    orderBy:{updatedAt:'desc'},
+    take:10,
+    select:{createdAt:true,updatedAt:true}
+  });
+
+  if(completedOrders.length===0) return 15;
+
+  const totalMinutes = completedOrders.reduce((acc,order)=>{
+    const diff = new Date(order.updatedAt) - new Date(order.createdAt);
+    return acc + (diff/1000/60);
+  },0);
+
+  return Math.round(totalMinutes / completedOrders.length);
 };

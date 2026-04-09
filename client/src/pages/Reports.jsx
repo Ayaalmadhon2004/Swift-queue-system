@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../api/axiosConfig";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import ReportSkeleton from "../components/ReportSkeleton";
 
 const Reports = () => {
     const [reportData, setReportData] = useState(null);
@@ -18,17 +19,16 @@ const Reports = () => {
         fetchReports();
     }, []);
 
-    if (!reportData) return <div className="text-white p-10 text-center animate-pulse">جاري جلب الإحصائيات...</div>;
-
+    if (loading || !reportData) {
+    return <ReportSkeleton/>;
+    }
     return (
         <div className="p-8 bg-slate-900 min-h-screen text-white" dir="rtl">
             <h1 className="text-3xl font-black mb-10">تقارير الأداء الذكية 📈</h1>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* الرسم البياني الخطي - حجم الطلبات */}
                 <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700">
                     <h2 className="text-xl font-bold mb-4 text-blue-400">حجم الطلبات (آخر 7 أيام)</h2>
-                    {/* حل مشكلة التحذير الأصفر: إعطاء ارتفاع ثابت للـ Container */}
                     <div style={{ width: '100%', height: 300 }}>
                         <ResponsiveContainer>
                             <LineChart data={reportData.dailyStats}>
@@ -42,7 +42,6 @@ const Reports = () => {
                     </div>
                 </div>
 
-                {/* الرسم البياني الدائري - توزيع الحالات */}
                 <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700">
                     <h2 className="text-xl font-bold mb-4 text-emerald-400">توزيع حالات الطلبات</h2>
                     <div style={{ width: '100%', height: 300 }}>
