@@ -22,8 +22,10 @@ export const addOrderToBuffer = (orderData) => {
   return orderBuffer.length;
 };
 
+// مزامنة الطلبات الموجودة في الـ Buffer مع قاعدة البيانات كل 10 ثوانٍ
 export const syncOrdersWithDb = async () => {
   if (orderBuffer.length === 0) return;
+  
   logger.info(`🚀 Syncing ${orderBuffer.length} orders from buffer...`);
   const toCreate = [...orderBuffer];
   orderBuffer = [];
@@ -40,7 +42,7 @@ export const syncOrdersWithDb = async () => {
       return Promise.all(
         toCreate.map(item => tx.order.create({
           data: {
-            customerName: item.customerName,
+            customerName: item.customerName || item.guestName || "Guest",
             status: item.status,
             queueNumber: nextQueue++,
             userId: item.userId || null,
@@ -65,25 +67,19 @@ export const syncOrdersWithDb = async () => {
 
 setInterval(syncOrdersWithDb, 10000);
 
-export const createPublicOrder = async (customerName) => {
+export const createNewOrder = async (orderData) => {
   const lastOrder = await prisma.order.findFirst({ orderBy: { queueNumber: 'desc' } });
   const queueNumber = (lastOrder?.queueNumber || 0) + 1;
 
   const order = await prisma.order.create({
-    data: { customerName, queueNumber, status: 'PREPARING' }
+    data: { ...orderData, queueNumber }
   });
 
   try {
     const io = getIO();
-    io.emit('newOrder', {
-      id: order.id,
-      customerName: order.customerName,
-      queueNumber: order.queueNumber,
-      status: order.status,
-      createdAt: order.createdAt
-    });
+    io.emit('newOrder', order);
   } catch (err) {
-    logger.warn('Socket emit failed in createPublicOrder', err);
+    logger.warn('Socket emit failed in createNewOrder', err);
   }
   return order;
 };
@@ -95,25 +91,12 @@ export const getPublicOrders = async () => {
   });
 };
 
-export const getPendingCount = async () => {
-  return await prisma.order.count({ where: { status: 'PREPARING' } });
-};
-
-export const getOrderById = async (id) => {
-  return await prisma.order.findUnique({ where: { id } });
-};
-
-export const getAllOrders = async (page = 1, limit = 10) => {
-  const skip = (page - 1) * limit;
-  const [orders, total] = await Promise.all([
-    prisma.order.findMany({ take: limit, skip, orderBy: { createdAt: 'desc' } }),
-    prisma.order.count()
-  ]);
-  return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
-};
-
 export const getUserOrders = async (userId) => {
-  return await prisma.order.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } });
+  if (!userId) return []; 
+  return await prisma.order.findMany({ 
+    where: { userId }, 
+    orderBy: { createdAt: 'desc' } 
+  });
 };
 
 export const updateOrderStatus = async (orderId, status) => {
@@ -129,14 +112,36 @@ export const updateOrderStatus = async (orderId, status) => {
       io.to(updatedOrder.userId).emit('status_updated', {
         orderId: updatedOrder.id,
         newStatus: status,
-        message: `Your order status has been updated to ${status}`
+        queueNumber: updatedOrder.queueNumber
       });
     }
-    io.emit('orderStatusChanged', { orderId: updatedOrder.id, newStatus: status });
+    io.emit('orderStatusChanged', { 
+        orderId: updatedOrder.id, 
+        newStatus: status,
+        queueNumber: updatedOrder.queueNumber 
+    });
   } catch (err) {
     logger.warn('Socket emit failed in updateOrderStatus', err);
   }
   return updatedOrder;
+};
+
+export const getEstimatedWaitTime = async () => {
+  const completedOrders = await prisma.order.findMany({
+    where: { status: 'COMPLETED' },
+    orderBy: { updatedAt: 'desc' },
+    take: 10,
+    select: { createdAt: true, updatedAt: true }
+  });
+
+  if (completedOrders.length === 0) return 15;
+
+  const totalMinutes = completedOrders.reduce((acc, order) => {
+    const diff = new Date(order.updatedAt) - new Date(order.createdAt);
+    return acc + (diff / 1000 / 60);
+  }, 0);
+
+  return Math.round(totalMinutes / completedOrders.length);
 };
 
 export const getAdminStats = async () => {
@@ -147,7 +152,8 @@ export const getAdminStats = async () => {
     prisma.order.count({ where: { status: 'COMPLETED' } })
   ]);
 
-  return { totalOrders, preparing, ready, completed, avgWaitTime: 5 };
+  const avgWaitTime = await getEstimatedWaitTime();
+  return { totalOrders, preparing, ready, completed, avgWaitTime };
 };
 
 export const getReportsData = async () => {
@@ -167,24 +173,22 @@ export const getReportsData = async () => {
       date: s.createdAt.toISOString().split('T')[0],
       count: s._count.id
     })),
-    statusDistribution: statusDist
+    statusDistribution: statusDist.map(d => ({
+        status: d.status,
+        count: d._count.id
+    }))
   };
 };
 
-export const getEstimatedWaitTime = async()=>{
-  const completedOrders = await prisma.order.findMany({
-    where:{status:'COMPLETED'},
-    orderBy:{updatedAt:'desc'},
-    take:10,
-    select:{createdAt:true,updatedAt:true}
-  });
+export const getOrderById = async (id) => {
+  return await prisma.order.findUnique({ where: { id } });
+};
 
-  if(completedOrders.length===0) return 15;
-
-  const totalMinutes = completedOrders.reduce((acc,order)=>{
-    const diff = new Date(order.updatedAt) - new Date(order.createdAt);
-    return acc + (diff/1000/60);
-  },0);
-
-  return Math.round(totalMinutes / completedOrders.length);
+export const getAllOrders = async (page = 1, limit = 10) => {
+  const skip = (page - 1) * limit;
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({ take: limit, skip, orderBy: { createdAt: 'desc' } }),
+    prisma.order.count()
+  ]);
+  return { orders, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };

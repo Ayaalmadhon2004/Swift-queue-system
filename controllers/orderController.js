@@ -1,88 +1,101 @@
-import * as orderService from '../services/orderService.js';
+import prisma from '../lib/prisma.js';
 import { orderSchema } from '../validations/orderValidation.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
-export const createOrder = asyncHandler(async (req, res) => {
-    const validatedData = orderSchema.parse(req.body);
-    const queueSize = orderService.addOrderToBuffer({
-        ...validatedData,
-        userId: req.userId
+// 1. جلب إحصائيات الأدمن (حل خطأ 500)
+export const getAdminStats = asyncHandler(async (req, res) => {
+    try {
+        const [totalOrders, preparing, ready, completed] = await Promise.all([
+            prisma.order.count(),
+            prisma.order.count({ where: { status: 'PREPARING' } }),
+            prisma.order.count({ where: { status: 'READY' } }),
+            prisma.order.count({ where: { status: 'COMPLETED' } })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                totalOrders: totalOrders || 0,
+                preparing: preparing || 0,
+                ready: ready || 0,
+                completed: completed || 0,
+                avgWaitTime: 15
+            }
+        });
+    } catch (error) {
+        console.error("Critical Error in getAdminStats:", error.message);
+        return res.status(500).json({ success: false, message: "خطأ في قاعدة البيانات" });
+    }
+});
+
+// 2. جلب كافة الطلبات (Export مفقود كان يسبب انهيار السيرفر)
+export const getOrders = asyncHandler(async (req, res) => {
+    const orders = await prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: { user: { select: { name: true } } }
     });
-    res.status(202).json({
-        success: true,
-        message: "Order queued successfully",
-        currentQueue: queueSize
-    });
+    return res.status(200).json({ success: true, data: orders });
 });
 
-export const createPublicOrder = asyncHandler(async (req, res) => {
-    const { customerName } = req.body;
-    const order = await orderService.createPublicOrder(customerName);
-    res.status(201).json(order);
-});
-
-export const getPublicOrders = asyncHandler(async (req, res) => {
-    const orders = await orderService.getPublicOrders();
-    res.json(orders);
-});
-
-export const getPendingCount = asyncHandler(async (req, res) => {
-    const count = await orderService.getPendingCount();
-    res.json({ count });
-});
-
+// 3. جلب طلب واحد بالمعرف (Export مفقود كان يسبب انهيار السيرفر)
 export const getOrder = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const order = await orderService.getOrderById(id);
-    if (!order) {
-        const error = new Error("Order not found");
-        error.statusCode = 404;
-        throw error;
-    }
-    res.status(200).json({ success: true, data: order });
+    const order = await prisma.order.findUnique({ where: { id } });
+    if (!order) return res.status(404).json({ success: false, message: "الطلب غير موجود" });
+    return res.status(200).json({ success: true, data: order });
 });
 
-export const getOrders = asyncHandler(async (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const result = await orderService.getAllOrders(page, limit);
-    res.status(200).json({ success: true, ...result });
+// 4. جلب الطلبات العامة للشاشة (Export مفقود كان يسبب انهيار السيرفر)
+export const getPublicOrders = asyncHandler(async (req, res) => {
+    const orders = await prisma.order.findMany({
+        where: { status: { in: ['PREPARING', 'READY'] } },
+        orderBy: { createdAt: 'asc' }
+    });
+    return res.status(200).json({ success: true, data: orders });
 });
 
+// 5. جلب طلبات المستخدم الحالي (حل خطأ 401)
 export const getMyOrders = asyncHandler(async (req, res) => {
-    const orders = await orderService.getUserOrders(req.userId);
-    res.status(200).json({
-        success: true,
-        count: orders.length,
-        data: orders
+    const userId = req.user?.id;
+    if (!userId) return res.status(200).json({ success: true, data: [] });
+
+    const orders = await prisma.order.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' }
     });
+    return res.status(200).json({ success: true, data: orders });
 });
 
-export const getWaitingCount = asyncHandler(async (req, res) => {
-    const count = await orderService.getPendingCount();
-    res.json({ waitingCount: count });
+// 6. إنشاء طلب جديد
+export const createOrder = asyncHandler(async (req, res) => {
+    const validatedData = orderSchema.parse(req.body);
+    const count = await prisma.order.count();
+
+    const newOrder = await prisma.order.create({
+        data: {
+            ...validatedData,
+            queueNumber: count + 1,
+            status: 'PREPARING',
+            userId: req.user?.id || null,
+            customerName: req.body.customerName || "Guest"
+        }
+    });
+    return res.status(201).json({ success: true, data: newOrder });
 });
 
-export const getAdminStats = asyncHandler(async (req, res) => {
-    const stats = await orderService.getAdminStats();
-    res.json(stats);
+// 7. تحديث حالة الطلب
+export const updateOrderStatus = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const updatedOrder = await prisma.order.update({
+        where: { id },
+        data: { status }
+    });
+    return res.status(200).json({ success: true, data: updatedOrder });
 });
 
+// 8. جلب التقارير
 export const getReports = asyncHandler(async (req, res) => {
-    const reports = await orderService.getReportsData();
-    res.status(200).json({
-        success: true,
-        data: reports
-    });
-});
-
-export const getMyOrders2=asyncHandler(async(req,res)=>{
-    const orders=await orderService.getUserOrders(req.user.id);
-    const waitTime=await orderService.getEstimatedWaitTime();
-
-    res.status(200).json({
-        success:true,
-        data:orders,
-        estimatedWaitTime: waitTime
-    });
+    const reports = await prisma.order.findMany({ take: 50, orderBy: { createdAt: 'desc' } });
+    return res.status(200).json({ success: true, data: reports });
 });

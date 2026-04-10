@@ -4,29 +4,27 @@ import {
     getOrder,
     getOrders,
     getMyOrders,
-    getWaitingCount,
-    createPublicOrder,
     getPublicOrders,
-    getPendingCount,
     getAdminStats,
-    getReports
+    getReports,
+    updateOrderStatus 
 } from '../controllers/orderController.js';
-import { protect } from '../middlewares/authMiddleware.js';
+import { protect, optionalProtect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/public', getPublicOrders);
-router.get('/count/pending', getPendingCount);
-router.post('/public/create', createPublicOrder);
+router.get('/public/active', getPublicOrders);
+
+router.post('/', optionalProtect, createOrder);
 
 router.use(protect);
 
+router.get('/my-orders', getMyOrders);
 router.get('/admin/stats', getAdminStats);
 router.get('/admin/reports', getReports);
-router.get('/my-orders', getMyOrders);
-router.get('/count/waiting', getWaitingCount);
-router.post('/', createOrder);
-router.get('/', getOrders);
+router.get('/admin/orders', getOrders); 
 router.get('/:id', getOrder);
+
+router.patch('/:id/status', updateOrderStatus);
 
 export default router;

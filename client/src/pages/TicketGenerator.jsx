@@ -48,6 +48,22 @@ const TicketGenerator = () => {
     }
   };
 
+  const handleGetTicket=async()=>{
+    try{
+      const guestId = localStorage.getItem('guestId') || `guest_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('guestId',guestId);
+
+      const response = await api.post('/orders',{
+        guestName:'guest swift ',
+        tempId:guestId
+      });
+
+      Navigate('/my-orders');
+    } catch (err){
+      console.error('failed in have ticket',err);
+    }
+  };
+
   const estimatedTime = waitingCount * 5;
 
   return (

@@ -4,7 +4,6 @@ import asyncHandler from '../utils/asyncHandler.js';
 export const protect = asyncHandler(async (req, res, next) => {
     let token;
 
-    // 1. البحث عن التوكن في الكوكيز (الأولوية لنظامك الحالي)
     if (req.cookies && req.cookies.token) {
         token = req.cookies.token;
     } 
@@ -29,3 +28,12 @@ export const protect = asyncHandler(async (req, res, next) => {
         throw err;
     }
 });
+
+
+export const optionalProtect = asyncHandler(async(req,res,next)=>{
+    let token;
+
+    if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
+        
+    }
+})
