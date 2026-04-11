@@ -2,12 +2,14 @@ import prisma from '../lib/prisma.js';
 import logger from '../lib/logger.js';
 import { getIO } from '../lib/socket.js'; 
 
-let orderBuffer = [];
+// يجب تصدير المتغير ليكون متاحاً للاستيراد في الملفات الأخرى
+export let orderBuffer = []; 
 
 export const addOrderToBuffer = (orderData) => {
   const buffered = {
     ...orderData,
-    status: 'PREPARING'
+    status: 'PREPARING',
+    createdAt: new Date() // إضافة وقت افتراضي للفرز في الفرونت إند
   };
   orderBuffer.push(buffered);
   try {
@@ -60,11 +62,13 @@ export const syncOrdersWithDb = async () => {
     }
     logger.info(`✅ Successfully synced ${createdOrders.length} orders.`);
   } catch (error) {
+    // إعادة البيانات للبفر في حال الفشل لمنع ضياعها
     orderBuffer = [...toCreate, ...orderBuffer];
     logger.error(`❌ Sync Failed: ${error.message}. Data restored to buffer.`);
   }
 };
 
+// تفعيل المزامنة الدورية
 setInterval(syncOrdersWithDb, 10000);
 
 export const createNewOrder = async (orderData) => {

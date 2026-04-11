@@ -1,8 +1,12 @@
 import prisma from '../lib/prisma.js';
 import { orderSchema } from '../validations/orderValidation.js';
 import asyncHandler from '../utils/asyncHandler.js';
+// 1. استيراد orderBuffer مرة واحدة فقط من الخدمة
+import { orderBuffer } from '../services/orderService.js'; 
 
-// 1. جلب إحصائيات الأدمن (حل خطأ 500)
+// ❌ تم حذف السطر المكرر import { orderBuffer } والتعريف let orderBuffer لحل خطأ الـ Identifier already declared
+
+// 1. جلب إحصائيات الأدمن
 export const getAdminStats = asyncHandler(async (req, res) => {
     try {
         const [totalOrders, preparing, ready, completed] = await Promise.all([
@@ -28,7 +32,7 @@ export const getAdminStats = asyncHandler(async (req, res) => {
     }
 });
 
-// 2. جلب كافة الطلبات (Export مفقود كان يسبب انهيار السيرفر)
+// 2. جلب كافة الطلبات
 export const getOrders = asyncHandler(async (req, res) => {
     const orders = await prisma.order.findMany({
         orderBy: { createdAt: 'desc' },
@@ -37,7 +41,7 @@ export const getOrders = asyncHandler(async (req, res) => {
     return res.status(200).json({ success: true, data: orders });
 });
 
-// 3. جلب طلب واحد بالمعرف (Export مفقود كان يسبب انهيار السيرفر)
+// 3. جلب طلب واحد بالمعرف
 export const getOrder = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const order = await prisma.order.findUnique({ where: { id } });
@@ -45,7 +49,7 @@ export const getOrder = asyncHandler(async (req, res) => {
     return res.status(200).json({ success: true, data: order });
 });
 
-// 4. جلب الطلبات العامة للشاشة (Export مفقود كان يسبب انهيار السيرفر)
+// 4. جلب الطلبات العامة للشاشة
 export const getPublicOrders = asyncHandler(async (req, res) => {
     const orders = await prisma.order.findMany({
         where: { status: { in: ['PREPARING', 'READY'] } },
@@ -54,32 +58,62 @@ export const getPublicOrders = asyncHandler(async (req, res) => {
     return res.status(200).json({ success: true, data: orders });
 });
 
-// 5. جلب طلبات المستخدم الحالي (حل خطأ 401)
+// 5. جلب طلبات المستخدم الحالي (التي تربط بين الـ Buffer وقاعدة البيانات)
 export const getMyOrders = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
-    if (!userId) return res.status(200).json({ success: true, data: [] });
+    
+    let dbOrders = [];
+    if (userId) {
+        dbOrders = await prisma.order.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' }
+        });
+    } else {
+        // الحل: جلب آخر 5 طلبات في النظام لضمان ظهور طلبات الـ Guest
+        dbOrders = await prisma.order.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' }
+        });
+    }
 
-    const orders = await prisma.order.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' }
+    // دمج نتائج الـ Buffer مع قاعدة البيانات
+    const bufferedOrders = orderBuffer.filter(order => order.userId === userId || (!userId && !order.userId));
+    const allOrders = [...bufferedOrders, ...dbOrders];
+
+    return res.status(200).json({ 
+        success: true, 
+        data: allOrders 
     });
-    return res.status(200).json({ success: true, data: orders });
 });
 
 // 6. إنشاء طلب جديد
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
-    const count = await prisma.order.count();
+    
+    const newOrder = await prisma.$transaction(async (tx) => {
+        const lastOrder = await tx.order.findFirst({
+            orderBy: { queueNumber: 'desc' }
+        });
+        const nextQueue = (lastOrder?.queueNumber || 0) + 1;
 
-    const newOrder = await prisma.order.create({
-        data: {
-            ...validatedData,
-            queueNumber: count + 1,
-            status: 'PREPARING',
-            userId: req.user?.id || null,
-            customerName: req.body.customerName || "Guest"
-        }
+        return tx.order.create({
+            data: {
+                ...validatedData,
+                queueNumber: nextQueue,
+                status: 'PREPARING',
+                userId: req.user?.id || null,
+                customerName: req.body.customerName || "Guest"
+            }
+        });
     });
+
+    try {
+        const io = req.app.get('socketio');
+        io.emit('orderStatusChanged', newOrder);
+    } catch (err) {
+        console.error("Socket error:", err);
+    }
+
     return res.status(201).json({ success: true, data: newOrder });
 });
 

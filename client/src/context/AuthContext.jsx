@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react'; // 1. أضيفي useContext هنا
 import api from '../api/axiosConfig';
 
 export const AuthContext = createContext();
@@ -10,11 +10,9 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const checkUser = async () => {
             try {
-                // لا نحتاج للبحث عن توكن يدوياً، الكوكي ستُرسل تلقائياً لـ /me
                 const { data } = await api.get('/auth/me'); 
                 setUser(data.data);
             } catch (error) {
-                // إذا فشل الطلب (401)، يعني لا يوجد كوكي صالحة
                 setUser(null);
             } finally {
                 setLoading(false);
@@ -24,14 +22,13 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
-        // السيرفر سيقوم بوضع الكوكي في المتصفح عند نجاح هذا الطلب
         const { data } = await api.post('/auth/login', { email, password });
         setUser(data.user);
     };
 
     const logout = async () => {
         try {
-            await api.post('/auth/logout'); // طلب للسيرفر لمسح الكوكي
+            await api.post('/auth/logout'); 
         } catch (err) {
             console.error("Logout failed", err);
         } finally {
@@ -44,4 +41,13 @@ export const AuthProvider = ({ children }) => {
             {children}
         </AuthContext.Provider>
     );
+};
+
+// 2. دالة useAuth يجب أن تكون خارج الـ Provider وبشكل مستقل
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
 };
