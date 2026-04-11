@@ -34,14 +34,12 @@ function App() {
             <Route path="/display" element={<QueueDisplay />} />
             <Route path="/ticket" element={<TicketGenerator />} />
 
-            {/* 2. المسارات المحمية (تحتاج تسجيل دخول كـ Admin أو User) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/reports" element={<Reports />} />
             </Route>
 
-            {/* 3. التعامل مع الروابط غير الصحيحة */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
