@@ -1,33 +1,8 @@
 import jwt from 'jsonwebtoken';
 import asyncHandler from '../utils/asyncHandler.js';
 
-export const protect = asyncHandler(async (req, res, next) => {
-    let token;
-    if (req.cookies && req.cookies.token) {
-        token = req.cookies.token;
-    } 
-    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (!token) {
-        const err = new Error('Not authorized, no token found');
-        err.statusCode = 401;
-        throw err;
-    }
-
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.userId; 
-        next();
-    } catch (error) {
-        const err = new Error('Not authorized, token failed');
-        err.statusCode = 401;
-        throw err;
-    }
-});
-
-export const optionalProtect = asyncHandler(async (req, res, next) => {
+// دالة مساعدة لاستخراج والتحقق من الـ Token
+const getDecodedToken = (req) => {
     let token;
 
     if (req.cookies && req.cookies.token) {
@@ -36,15 +11,34 @@ export const optionalProtect = asyncHandler(async (req, res, next) => {
         token = req.headers.authorization.split(' ')[1];
     }
 
-    if (!token) {
-        return next();
-    }
+    if (!token) return null;
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.userId; 
-        next();
+        return jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
-        next();
+        return null;
     }
+};
+
+export const protect = asyncHandler(async (req, res, next) => {
+    const decoded = getDecodedToken(req);
+
+    if (!decoded) {
+        const err = new Error('Not authorized, please login');
+        err.statusCode = 401;
+        throw err;
+    }
+
+    req.userId = decoded.userId;
+    next();
+});
+
+export const optionalProtect = asyncHandler(async (req, res, next) => {
+    const decoded = getDecodedToken(req);
+
+    if (decoded) {
+        req.userId = decoded.userId;
+    }
+    
+    next(); 
 });
