@@ -2,30 +2,36 @@ import React from 'react';
 
 const ReportSkeleton = () => {
     return (
-        <div className="p-8 bg-slate-900 min-h-screen text-white" dir="rtl">
-            <div className="h-10 w-64 bg-slate-800 rounded-lg animate-pulse mb-10"></div>
+        <div className="p-8 bg-[#050505] min-h-screen text-white">
+            {/* Header Skeleton */}
+            <div className="h-12 w-80 bg-white/5 border border-white/5 rounded-2xl animate-pulse mb-12"></div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 h-[400px] flex flex-col">
-                    <div className="h-6 w-48 bg-slate-700 rounded mb-6 animate-pulse"></div>
-                    <div className="flex-1 w-full bg-slate-700/50 rounded-2xl animate-pulse relative overflow-hidden">
-                        <div className="absolute inset-0 flex flex-col justify-between p-4">
-                            {[...Array(5)].map((_, i) => (
-                                <div key={i} className="border-b border-slate-600 w-full h-px"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                {/* Chart Box Skeleton */}
+                <div className="bg-[#0A0A0A] p-8 rounded-[3rem] border border-white/5 h-[450px] flex flex-col">
+                    <div className="h-4 w-40 bg-white/5 rounded-full mb-10 animate-pulse"></div>
+                    <div className="flex-1 w-full bg-white/5 rounded-3xl animate-pulse relative overflow-hidden">
+                        {/* Fake Grid Lines */}
+                        <div className="absolute inset-0 flex flex-col justify-between p-8 opacity-20">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="border-b border-white/10 w-full h-px"></div>
                             ))}
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 h-[400px] flex flex-col items-center">
-                    <div className="h-6 w-48 bg-slate-700 rounded mb-10 self-start animate-pulse"></div>
-                    <div className="w-56 h-56 bg-slate-700/50 rounded-full animate-pulse border-8 border-slate-700 flex items-center justify-center">
-                        <div className="w-24 h-24 bg-slate-800 rounded-full"></div>
+                {/* Distribution Box Skeleton */}
+                <div className="bg-[#0A0A0A] p-8 rounded-[3rem] border border-white/5 h-[450px] flex flex-col items-center">
+                    <div className="h-4 w-40 bg-white/5 rounded-full mb-12 self-start animate-pulse"></div>
+                    {/* Circle Loader */}
+                    <div className="w-64 h-64 bg-white/5 rounded-full animate-pulse border-[16px] border-white/5 flex items-center justify-center relative">
+                        <div className="w-32 h-32 bg-[#050505] rounded-full"></div>
                     </div>
-                    <div className="mt-8 flex gap-4">
-                        <div className="h-4 w-12 bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-4 w-12 bg-slate-700 rounded animate-pulse"></div>
-                        <div className="h-4 w-12 bg-slate-700 rounded animate-pulse"></div>
+                    {/* Legend Skeleton */}
+                    <div className="mt-12 flex gap-6">
+                        <div className="h-3 w-16 bg-white/10 rounded-full animate-pulse"></div>
+                        <div className="h-3 w-16 bg-white/10 rounded-full animate-pulse"></div>
+                        <div className="h-3 w-16 bg-white/10 rounded-full animate-pulse"></div>
                     </div>
                 </div>
             </div>
