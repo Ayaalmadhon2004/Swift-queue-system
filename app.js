@@ -32,7 +32,7 @@ app.set('socketio', io); // لجعل io متاحاً داخل الـ Controllers
  * تدعم كافة منافذ Vite التي تظهر في مشروعك لضمان عدم حظر الطلبات
  */
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5177'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]

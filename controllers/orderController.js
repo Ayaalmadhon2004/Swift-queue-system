@@ -90,26 +90,27 @@ export const getMyOrders = asyncHandler(async (req, res) => {
 export const createOrder = asyncHandler(async (req, res) => {
     const validatedData = orderSchema.parse(req.body);
     
-    const newOrder = await prisma.$transaction(async (tx) => {
-        const lastOrder = await tx.order.findFirst({
-            orderBy: { queueNumber: 'desc' }
-        });
-        const nextQueue = (lastOrder?.queueNumber || 0) + 1;
+    // بدلاً من الـ Transaction المعقد، سنجلب آخر رقم ببساطة
+    const lastOrder = await prisma.order.findFirst({
+        orderBy: { queueNumber: 'desc' }
+    });
+    
+    const nextQueue = (lastOrder?.queueNumber || 0) + 1;
 
-        return tx.order.create({
-            data: {
-                ...validatedData,
-                queueNumber: nextQueue,
-                status: 'PREPARING',
-                userId: req.user?.id || null,
-                customerName: req.body.customerName || "Guest"
-            }
-        });
+    // إنشاء الطلب مباشرة
+    const newOrder = await prisma.order.create({
+        data: {
+            ...validatedData,
+            queueNumber: nextQueue,
+            status: 'PREPARING',
+            userId: req.user?.id || null,
+            customerName: req.body.customerName || "Guest"
+        }
     });
 
     try {
         const io = req.app.get('socketio');
-        io.emit('orderStatusChanged', newOrder);
+        if (io) io.emit('orderStatusChanged', newOrder);
     } catch (err) {
         console.error("Socket error:", err);
     }
@@ -132,4 +133,24 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
 export const getReports = asyncHandler(async (req, res) => {
     const reports = await prisma.order.findMany({ take: 50, orderBy: { createdAt: 'desc' } });
     return res.status(200).json({ success: true, data: reports });
+});
+
+// 9. جلب عدد الطلبات المنتظرة (لحل مشكلة الـ 404 في التيكت)
+export const getPendingCount = asyncHandler(async (req, res) => {
+    try {
+        // نستخدم prisma لحساب الطلبات التي حالتها PREPARING (أو حسب الحالة لديكِ)
+        const count = await prisma.order.count({
+            where: { 
+                status: 'PREPARING' 
+            }
+        });
+
+        return res.status(200).json({
+            success: true,
+            count: count || 0
+        });
+    } catch (error) {
+        console.error("Error in getPendingCount:", error.message);
+        return res.status(500).json({ success: false, message: "خطأ في جلب العداد" });
+    }
 });

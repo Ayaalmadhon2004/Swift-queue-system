@@ -7,16 +7,23 @@ import {
     getPublicOrders,
     getAdminStats,
     getReports,
-    updateOrderStatus 
+    updateOrderStatus,
+    getPendingCount // تأكد من استيراد هذه الدالة
 } from '../controllers/orderController.js';
 import { protect, optionalProtect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
+// --- المسارات العامة (Public) ---
 router.get('/public/active', getPublicOrders);
 
-router.post('/', optionalProtect, createOrder);
+// هذا المسار لحل مشكلة الـ 404 عند جلب عدد المنتظرين
+router.get('/count/pending', getPendingCount); 
 
+// هذا المسار لحل مشكلة الـ 404 عند إنشاء تذكرة جديدة
+router.post('/public/create', optionalProtect, createOrder); 
+
+// --- المسارات المحمية (Protected) ---
 router.use(protect);
 
 router.get('/my-orders', getMyOrders);
