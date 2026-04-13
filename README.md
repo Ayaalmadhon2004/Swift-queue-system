@@ -1,90 +1,86 @@
-Markdown
-# SwiftQueue - Real-Time Queue Management System 🚀
+SwiftQueue - Real-Time Queue Management System 
+SwiftQueue is a high-performance, full-stack ecosystem designed to streamline customer flow in high-traffic environments like restaurants and service centers. It bridges the gap between physical waiting and digital efficiency using real-time, bi-directional communication.
 
-**SwiftQueue** is a high-performance, full-stack web application designed to streamline customer flow in restaurants and service centers. It utilizes real-time bi-directional communication to sync order statuses across multiple interfaces instantly.
+Key Features
+Ticket Generator: Minimalist interface for customers to join the queue and receive unique, sequence-based ticket numbers.
 
----
+Live Queue Monitor: A high-visibility public dashboard featuring Real-time Voice Announcements (Web Speech API) and instant status transitions.
 
-## 🌟 Key Features
+Staff Control Center: An authenticated workspace for employees to manage the order lifecycle (Pending → Preparing → Ready) with a single click.
 
-* **Ticket Generator:** A user-friendly interface for customers to join the queue and receive a unique ticket number.
-* **Live Queue Monitor (Public Display):** A high-visibility dashboard for waiting areas with **Real-time Voice Announcements** (Text-to-Speech) and status updates.
-* **Staff Dashboard:** An authenticated workspace for employees to manage orders (Pending → Preparing → Ready) with instant notifications.
-* **Real-time Synchronization:** Built with **Socket.io** using a centralized provider pattern to ensure data consistency without page refreshes.
+Instant Notifications: Uses a combination of Audio API, Vibration API, and Browser Notifications to alert users when their order is ready.
 
----
+Engineering Architecture
+This project is built on the DRY (Don't Repeat Yourself) principle and focuses on optimized state management:
 
-## 🛠️ Tech Stack
+Hybrid Sync Strategy: Combines TanStack Query for robust server-state caching with Socket.io for real-time "push" invalidation. This ensures the UI is always fresh without constant API polling.
 
-### Frontend (Client)
-* **React (Vite) + TypeScript:** For a type-safe, lightning-fast UI.
-* **Tailwind CSS:** Modern, responsive styling.
-* **Socket.io-client:** Real-time event handling.
-* **React Router Dom:** Secure navigation and protected routes.
-* **Context API:** Centralized state management for Authentication and Sockets.
+Centralized Socket Pattern: Implements a SocketProvider to manage a single persistent connection across the entire component tree, preventing memory leaks and redundant handshakes.
 
-### Backend (Server)
-* **Node.js & Express:** Scalable server architecture.
-* **Prisma ORM:** Modern database toolkit.
-* **PostgreSQL:** Robust relational data storage.
-* **Socket.io:** Real-time server-side event emission.
-* **JWT & Bcrypt:** Secure authentication and password hashing.
+Security-First Auth: Implemented JWT (JSON Web Tokens) stored in HttpOnly, SameSite Cookies to mitigate XSS and CSRF risks.
 
----
+Scalable Backend: Modularized into Controllers, Services, and Middlewares to separate business logic from the HTTP layer.
 
-## 🏗️ Architecture (The DRY Approach)
+🛠️ Tech Stack
+Frontend
+React (Vite) & TypeScript: For type-safe, lightning-fast development.
 
-The project follows the **DRY (Don't Repeat Yourself)** principle by implementing:
-1.  **SocketProvider:** A centralized context that manages a single socket connection for the entire app.
-2.  **Axios Interceptors:** Global API configuration that automatically handles Authorization headers and base URLs.
-3.  **Protected Routes:** A higher-order component strategy to secure sensitive dashboard views.
+TanStack Query: Advanced data fetching and cache management.
 
----
+Tailwind CSS: For a modern, responsive "Dark Mode" UI.
 
-## 🚀 Getting Started
+Socket.io-client: Real-time event handling.
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/your-username/swift-queue.git](https://github.com/your-username/swift-queue.git)
-Install dependencies:
+Backend
+Node.js & Express: Scalable server-side logic.
 
+Prisma ORM: Type-safe database access and migrations.
+
+PostgreSQL: Robust relational data storage.
+
+Socket.io: Server-side event emission.
+
+Bcrypt: Industrial-grade password hashing.
+
+Getting Started
+1. Clone the repository
 Bash
-# For Server
+git clone https://github.com/your-username/swift-queue.git
+cd swift-queue
+2. Environment Setup
+Create a .env file in the /server directory:
+
+مقتطف الرمز
+DATABASE_URL="postgresql://user:password@localhost:5432/swiftqueue"
+JWT_SECRET="your_super_secret_key"
+PORT=3000
+CLIENT_URL="http://localhost:5173"
+3. Install Dependencies
+Bash
+# Install Server dependencies
 cd server && npm install
-# For Client
-cd client && npm install
-Environment Setup: Create a .env file in the server directory with your DATABASE_URL and JWT_SECRET.
 
-Run the Project:
-
+# Install Client dependencies
+cd ../client && npm install
+4. Database Migration
 Bash
-# Start Backend
+cd ../server
+npx prisma migrate dev --name init
+5. Run the Project
+Bash
+# Terminal 1: Backend
+cd server
 npm run dev
-# Start Frontend
+
+# Terminal 2: Frontend
+cd client
 npm run dev
-👩‍💻 Developed By
-Aya Ahmad Almadhon Software Engineer | Frontend Specialist
+Roadmap
+[ ] Multi-Branch Support: Manage multiple locations from one dashboard.
 
+[ ] SMS Integration: Notify customers via WhatsApp/SMS.
 
----
+[ ] Advanced Analytics: Heatmaps of peak hours and average wait times.
 
-### 🚀 Step 2: The Final Push to GitHub
-Now, open your terminal and run these commands to update your repository with the new code and the English README:
-
-```powershell
-# 1. Add all changes (Code + README)
-git add .
-
-# 2. Commit with a professional message
-git commit -m "docs: add comprehensive English README and finalize system architecture"
-
-# 3. Push to GitHub
-git push origin main
-🏆 Achievement Unlocked!
-Your project is now professionally documented and pushed. Any recruiter looking at your GitHub will see that you:
-
-Understand System Architecture (SocketProvider).
-
-Write Clean Code (Axios Interceptors).
-
-Know how to Document technical work properly.
+Developed By
+Aya Ahmad Almadhon Software Engineer | Computer Systems Engineering Student at Al-Azhar University Focusing on high-performance Full-Stack applications and Clean Architecture.
